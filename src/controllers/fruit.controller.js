@@ -23,7 +23,64 @@ export async function addFruits(req, res) {
 
 export async function getFruit(req, res) {
   const id = req.params.id;
-  console.log(id);
-  res.status(200);
-  res.end();
+
+  try {
+    const fruit = await Fruit.findById(id);
+    if (!fruit) {
+      res.status(404).send({ detail: "Fruit Not Found" });
+      return;
+    }
+    res.send(fruit);
+  } catch (e) {
+    res.status(500).send({ error: "An error occured" });
+  }
+}
+
+export async function editFruit(req, res) {
+  const id = req.params.id;
+  try {
+    const fruit = await Fruit.findOneAndUpdate({ _id: id }, req.body, {
+      new: true,
+    });
+    if (!fruit) {
+      res.status(404).send({ detail: "Fruit Not found" });
+    }
+    res.send(fruit);
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+}
+
+export async function replaceFruit(req, res) {
+  const id = req.params.id;
+
+  try {
+    const fruit = await Fruit.findOneAndReplace({ _id: id }, req.body, {
+      returnDocument: "after",
+      runValidators: true,
+    });
+    if (!fruit) {
+      res.status(404).send({ detail: "Fruit Not found" });
+      return;
+    }
+
+    res.send(fruit);
+  } catch (e) {
+    res.status(500).send({ detail: e.message });
+  }
+}
+
+export async function deleteFruit(req, res) {
+  const id = req.params.id;
+
+  try {
+    const fruit = await Fruit.findByIdAndDelete(id);
+    if (!fruit) {
+      res.status(404).send({ detail: "Fruit not found" });
+      return;
+    }
+    res.status(204).end();
+  } catch {
+    res.status(500).send({ detail: "An error occured" });
+  }
 }

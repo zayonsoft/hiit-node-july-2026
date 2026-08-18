@@ -10,7 +10,9 @@ export default async function connectDb() {
       console.log("Database Url not set!");
       process.exit(1);
     }
+    console.log("Awaiting Database conncetion......");
     await mongoose.connect(connectionUrl);
+    console.log("Database connected......");
   } catch (e) {
     console.log(`An error occured: ${e}`);
     process.exit(1);
