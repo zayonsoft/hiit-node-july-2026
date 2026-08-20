@@ -3,7 +3,20 @@ import Fruit from "../models/fruit.models.js";
 export async function getFruits(req, res) {
   try {
     const fruits = await Fruit.find();
-    res.json({ fruits });
+    const search = req.query.search;
+
+    let filteredData = fruits;
+    if (search) {
+      filteredData = fruits.filter((fruit) => {
+        if (
+          fruit.name.toLowerCase().includes(search.toLowerCase()) ||
+          fruit.description.toLowerCase().includes(search.toLowerCase())
+        ) {
+          return fruit;
+        }
+      });
+    }
+    res.json({ fruits: filteredData });
   } catch (e) {
     res.json({ error: "An error occured" });
   }

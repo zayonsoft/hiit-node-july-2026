@@ -16,13 +16,6 @@ const studentSchema = new mongoose.Schema({
     trim: true,
     required: true,
   },
-  fruits: [
-    {
-      type: {
-        name: String,
-      },
-    },
-  ],
 });
 
 export default mongoose.model("Student", studentSchema);
