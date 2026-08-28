@@ -107,3 +107,7 @@ export async function signin(req, res) {
     return res.status(500).json({ detail: "An error occured" });
   }
 }
+
+export async function getProfile(req, res) {
+  res.json(req.user);
+}
