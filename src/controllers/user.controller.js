@@ -1,5 +1,9 @@
 import User from "../models/user.models.js";
 import bcrypt from "bcrypt";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../services/user.services.js";
 
 export async function signup(req, res) {
   const body = req.body;
@@ -14,6 +18,17 @@ export async function signup(req, res) {
       detail: "All fields are required",
       fields: ["username", "email", "password"],
     });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // if the email is invalid
+  if (!emailRegex.test(email)) {
+    return res.status(400).send({ detail: "Invalid e-mail address" });
+  }
+  // if the username includes @ symbol
+  if (username.includes("@")) {
+    return res.status(400).json({ detail: "username Shouldn't contain @" });
   }
 
   //   Checking if email exists
@@ -56,5 +71,39 @@ export async function getUsers(req, res) {
 
 export async function signin(req, res) {
   const body = req.body;
+  if (!body) {
+    return res.status(400).json({ detail: "request body cannot be empty" });
+  }
   const { password, usernameOrEmail } = body;
+
+  if (!(password && usernameOrEmail)) {
+    return res.status(400).send({
+      detail: "All fields are required",
+      fields: ["password", "usernameOrEmail"],
+    });
+  }
+  try {
+    const user = await User.findOne({
+      $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
+    }).select("+password");
+
+    if (!user) {
+      return res.status(401).json({ detail: "Invalid login credentials" });
+    }
+    // checking if password is correct.........
+    const isCorrect = await user.comparePassword(password);
+    if (!isCorrect) {
+      return res.status(401).json({ detail: "Invalid login credentials" });
+    }
+    // return a web token
+    const tokens = {
+      accessToken: generateAccessToken(user),
+      refreshToken: generateRefreshToken(user),
+    };
+    return res.json(tokens);
+  } catch (e) {
+    console.log(e);
+
+    return res.status(500).json({ detail: "An error occured" });
+  }
 }
