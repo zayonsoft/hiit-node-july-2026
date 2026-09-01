@@ -28,3 +28,19 @@ export async function authenticate(req, res, next) {
     return res.status(401).json({ detail: "Invalid token or expired token" });
   }
 }
+
+export async function adminsOnly(req, res, next) {
+  if (!req.user) {
+    return res
+      .status(401)
+      .json({ detail: "You are not allowed to access this resource" });
+  }
+
+  if (req.user.role != "admin") {
+    return res
+      .status(403)
+      .json({ detail: "You are not allowed to access this resource" });
+  }
+
+  next();
+}

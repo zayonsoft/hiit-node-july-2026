@@ -4,6 +4,8 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../services/user.services.js";
+import jwt from "jsonwebtoken";
+import env from "../config/env.js";
 
 export async function signup(req, res) {
   const body = req.body;
@@ -110,4 +112,29 @@ export async function signin(req, res) {
 
 export async function getProfile(req, res) {
   res.json(req.user);
+}
+
+export async function refreshAccessToken(req, res) {
+  if (!req.body) {
+    return res.status(400).json({ detail: "No request body sent" });
+  }
+  const refreshToken = req.body.refreshToken;
+  if (!refreshToken) {
+    return res
+      .status(400)
+      .send({ detail: "refreshToken not available in request body" });
+  }
+
+  try {
+    const decodedUser = jwt.verify(refreshToken, env.JWT_REFRESH);
+    const userId = decodedUser.userId;
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).send({ detail: "User not found" });
+    }
+    const token = generateAccessToken(user);
+    return res.json({ accessToken: token });
+  } catch {
+    return res.status(401).json({ detail: "Invalid refresh token" });
+  }
 }
