@@ -1,4 +1,5 @@
 import Student from "../models/student.model.js";
+import { studentValidator } from "../validators/student.validator.js";
 
 export async function getStudents(req, res) {
   const search = req.query.search;
@@ -24,6 +25,21 @@ export async function getStudents(req, res) {
 }
 
 export async function addStudents(req, res) {
+  if (!req.body) {
+    return res.status(400).send({ detail: "Request body cannot be empty" });
+  }
+
+  const { error, value } = studentValidator.validate(req.body, {
+    abortEarly: false,
+  });
+
+  if (error) {
+    const errorList = error.details.map((eachError) => {
+      return { [eachError.context.key]: eachError.message };
+    });
+
+    return res.status(400).send({ errors: errorList });
+  }
   try {
     const student = await Student.create(req.body);
     return res.json({ student });

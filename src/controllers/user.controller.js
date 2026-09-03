@@ -6,6 +6,7 @@ import {
 } from "../services/user.services.js";
 import jwt from "jsonwebtoken";
 import env from "../config/env.js";
+import { userValidator } from "../validators/user.validator.js";
 
 export async function signup(req, res) {
   const body = req.body;
@@ -13,24 +14,19 @@ export async function signup(req, res) {
     return res.status(400).json({ detail: "Request body is required" });
   }
 
-  const { username, password, email } = body;
+  const { error, value } = userValidator.validate(body, { abortEarly: false });
 
-  if (!(username && password && email)) {
-    return res.status(400).json({
-      detail: "All fields are required",
-      fields: ["username", "email", "password"],
-    });
+  if (error) {
+    return res.status(400).send({ errors: error.details });
   }
+
+  const { username, password, email } = body;
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   // if the email is invalid
   if (!emailRegex.test(email)) {
     return res.status(400).send({ detail: "Invalid e-mail address" });
-  }
-  // if the username includes @ symbol
-  if (username.includes("@")) {
-    return res.status(400).json({ detail: "username Shouldn't contain @" });
   }
 
   //   Checking if email exists
